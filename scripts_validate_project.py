@@ -90,6 +90,15 @@ for token in feature_tokens:
         errors.append(f"Required feature token is absent from source: {token}")
 checks.append("OCR, PDF, picker, safety notice, profile, deletion, retry, local storage, timeline, analyses, charts, manual editing, record links, and PDF export code are present")
 
+# Guard against known SwiftUI syntax/API compatibility issues found during Xcode compilation.
+if ".textContentType(.birthday)" in source_text:
+    errors.append("Unsupported UITextContentType.birthday usage found")
+invalid_section_footer = re.compile(r'Section\\s*\\(\\s*"[^"\\n]+"\\s*\\)\\s*\\{.*?\\}\\s*footer\\s*:', re.DOTALL)
+for match in invalid_section_footer.finditer(source_text):
+    line = source_text[:match.start()].count("\\n") + 1
+    errors.append(f"Section(title) with a trailing footer closure found near combined source line {line}; use the explicit Section content/header/footer initializer")
+checks.append("No unsupported birthday content type or Section(title) trailing-footer pattern found")
+
 # Confirm all new source files are represented as both file references and target members.
 new_source_names = [
     "ClinicalModels.swift",

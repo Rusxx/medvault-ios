@@ -48,7 +48,7 @@ struct DocumentEditView: View {
                     TextField("Учреждение", text: $facility)
                 }
 
-                Section("Показатели анализов") {
+                Section {
                     if labValues.isEmpty {
                         Text("Нет извлечённых показателей. Добавьте нужные значения вручную.")
                             .font(.footnote)
@@ -61,6 +61,8 @@ struct DocumentEditView: View {
                     Button("Добавить показатель", systemImage: "plus") {
                         labValues.append(LabValue(name: "", value: "", unit: nil, referenceRange: nil, isManuallyEdited: true))
                     }
+                } header: {
+                    Text("Показатели анализов")
                 } footer: {
                     Text("Изменённые показатели помечаются как исправленные вручную. MedVault хранит введённый текст и не интерпретирует результаты.")
                 }
@@ -81,10 +83,12 @@ struct DocumentEditView: View {
                     }
                 }
 
-                Section("Распознанный текст") {
+                Section {
                     TextEditor(text: $recognizedText)
                         .font(.footnote.monospaced())
                         .frame(minHeight: 180)
+                } header: {
+                    Text("Распознанный текст")
                 } footer: {
                     Text("Редактирование сохраняется только в локальном хранилище приложения и не изменяет оригинальный файл.")
                 }

@@ -14,7 +14,7 @@ struct MedicalCardView: View {
                 TextField("Имя", text: personalName)
                     .textContentType(.name)
                 TextField("Дата рождения", text: dateOfBirth)
-                    .textContentType(.birthday)
+                    .accessibilityLabel("Дата рождения")
                 TextField("Группа крови", text: bloodType)
             }
 
