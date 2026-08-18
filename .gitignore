@@ -1,0 +1,36 @@
+# Xcode user and build data
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+
+# Swift Package Manager (not used by this project, retained for safety)
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.bak
+
+# Environment variables and secrets
+.env
+.env.*
+*.p12
+*.mobileprovision
+*.cer
+
+# Never commit private medical documents or exported application data
+*.pdf
+*.jpg
+*.jpeg
+*.png
+*.heic
+*.tiff
+MedicalDocuments/
+MedVaultData/
