@@ -6,6 +6,7 @@ struct DocumentDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let documentID: UUID
     @State private var isShowingDeleteConfirmation = false
+    @State private var isShowingEditor = false
     @State private var copiedText = false
 
     private var document: MedicalDocument? {
@@ -40,6 +41,7 @@ struct DocumentDetailView: View {
                         if document.status == .completed {
                             SafetyNotice()
                             extractedInformation(document.extractedInfo)
+                            linkedRecords(document)
                             recognizedText(document.extractedText)
                         }
                     }
@@ -48,7 +50,15 @@ struct DocumentDetailView: View {
                 .navigationTitle("Документ")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        if document.status == .completed {
+                            Button {
+                                isShowingEditor = true
+                            } label: {
+                                Image(systemName: "pencil")
+                            }
+                            .accessibilityLabel("Исправить извлечённые данные")
+                        }
                         Button(role: .destructive) {
                             isShowingDeleteConfirmation = true
                         } label: {
@@ -56,6 +66,10 @@ struct DocumentDetailView: View {
                         }
                         .accessibilityLabel("Удалить документ")
                     }
+                }
+                .sheet(isPresented: $isShowingEditor) {
+                    DocumentEditView(document: document)
+                        .environmentObject(store)
                 }
                 .confirmationDialog("Удалить документ?", isPresented: $isShowingDeleteConfirmation, titleVisibility: .visible) {
                     Button("Удалить", role: .destructive) {
@@ -86,11 +100,18 @@ struct DocumentDetailView: View {
             HStack(spacing: 8) {
                 Label(document.type.rawValue, systemImage: document.type.symbolName)
                 Text("·")
-                Text(document.createdAt.formatted(date: .long, time: .omitted))
+                Text(document.recordDate.formatted(date: .long, time: .omitted))
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
-            ProcessingStatusBadge(status: document.status)
+            HStack(spacing: 8) {
+                ProcessingStatusBadge(status: document.status)
+                if document.hasManualCorrections {
+                    Label("Исправлено вручную", systemImage: "pencil.circle.fill")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.orange)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -181,6 +202,26 @@ struct DocumentDetailView: View {
                             Text(mention)
                                 .font(.subheadline)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func linkedRecords(_ document: MedicalDocument) -> some View {
+        let conditions = store.profile.conditions.filter { document.linkedConditionIDsValue.contains($0.id) }
+        let medications = store.profile.medications.filter { document.linkedMedicationIDsValue.contains($0.id) }
+        if !conditions.isEmpty || !medications.isEmpty {
+            InfoCard(title: "Связанные записи", symbol: "link") {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(conditions) { condition in
+                        Label("Заболевание: \(condition.name)", systemImage: "cross.case.fill")
+                            .font(.subheadline)
+                    }
+                    ForEach(medications) { medication in
+                        Label("Лекарство: \(medication.name)", systemImage: "pills.fill")
+                            .font(.subheadline)
                     }
                 }
             }

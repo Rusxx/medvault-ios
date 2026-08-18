@@ -32,14 +32,12 @@ struct MedicalCardView: View {
                 }
             } header: {
                 Label("Аллергии", systemImage: "allergens")
-            } footer: {
-                Text("Укажите аллерген, реакцию и заметку, если они известны.")
             }
 
             Section {
                 ForEach(store.profile.conditions) { condition in
                     Button { edit(condition) } label: {
-                        MedicalListRow(title: condition.name, details: [condition.year.isEmpty ? nil : "Год: \(condition.year)", condition.note])
+                        ConditionRow(condition: condition, documentCount: store.linkedDocuments(for: condition).count)
                     }
                     .buttonStyle(.plain)
                 }
@@ -50,12 +48,14 @@ struct MedicalCardView: View {
                 }
             } header: {
                 Label("Заболевания", systemImage: "heart.text.square")
+            } footer: {
+                Text("Для заболевания указываются дата, статус и заметка. Связанные документы выбираются на экране редактирования документа.")
             }
 
             Section {
                 ForEach(store.profile.medications) { medication in
                     Button { edit(medication) } label: {
-                        MedicalListRow(title: medication.name, details: [medication.dosage, medication.frequency, medication.note])
+                        MedicationRow(medication: medication, documentCount: store.linkedDocuments(for: medication).count)
                     }
                     .buttonStyle(.plain)
                 }
@@ -67,7 +67,7 @@ struct MedicalCardView: View {
             } header: {
                 Label("Лекарства", systemImage: "pills")
             } footer: {
-                Text("MedVault хранит записи; он не напоминает о приёме и не даёт рекомендаций по лекарствам.")
+                Text("MedVault хранит записи о сроках приёма; он не напоминает о приёме и не даёт рекомендаций по лекарствам.")
             }
 
             Section {
@@ -160,6 +160,67 @@ private struct MedicalListRow: View {
     }
 }
 
+private struct ConditionRow: View {
+    let condition: MedicalCondition
+    let documentCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(condition.name)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Label(condition.currentStatus.rawValue, systemImage: condition.currentStatus.symbolName)
+                    .font(.caption)
+                    .foregroundStyle(condition.currentStatus == .active ? .green : .secondary)
+            }
+            let dateText = condition.diagnosedAt?.formatted(date: .abbreviated, time: .omitted) ?? (condition.year.isEmpty ? nil : condition.year)
+            let details = [dateText.map { "С: \($0)" }, documentCount > 0 ? "Документов: \(documentCount)" : nil, condition.note.isEmpty ? nil : condition.note]
+            let visible = details.compactMap { $0 }
+            if !visible.isEmpty {
+                Text(visible.joined(separator: " · "))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+}
+
+private struct MedicationRow: View {
+    let medication: Medication
+    let documentCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(medication.name)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(medication.isActive ? "Активно" : "Завершено")
+                    .font(.caption)
+                    .foregroundStyle(medication.isActive ? .green : .secondary)
+            }
+            let dates = [
+                medication.startedAt.map { "С: \($0.formatted(date: .abbreviated, time: .omitted))" },
+                medication.endedAt.map { "По: \($0.formatted(date: .abbreviated, time: .omitted))" }
+            ].compactMap { $0 }.joined(separator: " · ")
+            let details = [medication.dosage, medication.frequency, dates.isEmpty ? nil : dates, documentCount > 0 ? "Документов: \(documentCount)" : nil]
+            let visible = details.compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if !visible.isEmpty {
+                Text(visible.joined(separator: " · "))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    }
+}
+
 private struct AllergyEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var item: Allergy
@@ -178,25 +239,30 @@ private struct AllergyEditor: View {
                 TextField("Заметка", text: $item.note, axis: .vertical)
             }
             .navigationTitle("Аллергия")
-            .toolbar { saveButton }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Сохранить") { onSave(item); dismiss() }.disabled(item.allergen.trimmingCharacters(in: .whitespaces).isEmpty) }
+                ToolbarItem(placement: .cancellationAction) { Button("Отмена") { dismiss() } }
+            }
         }
-    }
-
-    @ToolbarContentBuilder private var saveButton: some ToolbarContent {
-        ToolbarItem(placement: .confirmationAction) {
-            Button("Сохранить") { onSave(item); dismiss() }.disabled(item.allergen.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-        ToolbarItem(placement: .cancellationAction) { Button("Отмена") { dismiss() } }
     }
 }
 
 private struct ConditionEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var item: MedicalCondition
+    @State private var hasDiagnosedDate: Bool
+    @State private var hasResolvedDate: Bool
+    @State private var diagnosedDate: Date
+    @State private var resolvedDate: Date
+
     let onSave: (MedicalCondition) -> Void
 
     init(initial: MedicalCondition, onSave: @escaping (MedicalCondition) -> Void) {
         _item = State(initialValue: initial)
+        _hasDiagnosedDate = State(initialValue: initial.diagnosedAt != nil)
+        _hasResolvedDate = State(initialValue: initial.resolvedAt != nil)
+        _diagnosedDate = State(initialValue: initial.diagnosedAt ?? .now)
+        _resolvedDate = State(initialValue: initial.resolvedAt ?? .now)
         self.onSave = onSave
     }
 
@@ -204,12 +270,33 @@ private struct ConditionEditor: View {
         NavigationStack {
             Form {
                 TextField("Название", text: $item.name)
-                TextField("Год", text: $item.year).keyboardType(.numberPad)
+                Picker("Статус", selection: $item.status) {
+                    Text("Активное").tag(ConditionStatus?.some(.active))
+                    Text("Завершено").tag(ConditionStatus?.some(.resolved))
+                    Text("Неактивное").tag(ConditionStatus?.some(.inactive))
+                }
+                Toggle("Указать дату начала", isOn: $hasDiagnosedDate)
+                if hasDiagnosedDate {
+                    DatePicker("Дата начала", selection: $diagnosedDate, displayedComponents: .date)
+                }
+                Toggle("Указать дату завершения", isOn: $hasResolvedDate)
+                if hasResolvedDate {
+                    DatePicker("Дата завершения", selection: $resolvedDate, in: hasDiagnosedDate ? diagnosedDate... : Date.distantPast..., displayedComponents: .date)
+                }
                 TextField("Заметка", text: $item.note, axis: .vertical)
             }
             .navigationTitle("Заболевание")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Сохранить") { onSave(item); dismiss() }.disabled(item.name.trimmingCharacters(in: .whitespaces).isEmpty) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Сохранить") {
+                        item.diagnosedAt = hasDiagnosedDate ? diagnosedDate : nil
+                        item.resolvedAt = hasResolvedDate ? resolvedDate : nil
+                        item.year = hasDiagnosedDate ? diagnosedDate.formatted(.dateTime.year()) : item.year
+                        onSave(item)
+                        dismiss()
+                    }
+                    .disabled(item.name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
                 ToolbarItem(placement: .cancellationAction) { Button("Отмена") { dismiss() } }
             }
         }
@@ -219,10 +306,19 @@ private struct ConditionEditor: View {
 private struct MedicationEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var item: Medication
+    @State private var hasStartDate: Bool
+    @State private var hasEndDate: Bool
+    @State private var startDate: Date
+    @State private var endDate: Date
+
     let onSave: (Medication) -> Void
 
     init(initial: Medication, onSave: @escaping (Medication) -> Void) {
         _item = State(initialValue: initial)
+        _hasStartDate = State(initialValue: initial.startedAt != nil)
+        _hasEndDate = State(initialValue: initial.endedAt != nil)
+        _startDate = State(initialValue: initial.startedAt ?? .now)
+        _endDate = State(initialValue: initial.endedAt ?? .now)
         self.onSave = onSave
     }
 
@@ -232,11 +328,27 @@ private struct MedicationEditor: View {
                 TextField("Название", text: $item.name)
                 TextField("Дозировка", text: $item.dosage)
                 TextField("Частота", text: $item.frequency)
+                Toggle("Указать дату начала", isOn: $hasStartDate)
+                if hasStartDate {
+                    DatePicker("Дата начала", selection: $startDate, displayedComponents: .date)
+                }
+                Toggle("Указать дату окончания", isOn: $hasEndDate)
+                if hasEndDate {
+                    DatePicker("Дата окончания", selection: $endDate, in: hasStartDate ? startDate... : Date.distantPast..., displayedComponents: .date)
+                }
                 TextField("Заметка", text: $item.note, axis: .vertical)
             }
             .navigationTitle("Лекарство")
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Сохранить") { onSave(item); dismiss() }.disabled(item.name.trimmingCharacters(in: .whitespaces).isEmpty) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Сохранить") {
+                        item.startedAt = hasStartDate ? startDate : nil
+                        item.endedAt = hasEndDate ? endDate : nil
+                        onSave(item)
+                        dismiss()
+                    }
+                    .disabled(item.name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
                 ToolbarItem(placement: .cancellationAction) { Button("Отмена") { dismiss() } }
             }
         }

@@ -21,6 +21,14 @@
 		A1000000000000000000000D /* MedicalCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* MedicalCardView.swift */; };
 		A1000000000000000000000E /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* PrivacyView.swift */; };
 		A1000000000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* Assets.xcassets */; };
+		B10000000000000000000001 /* ClinicalModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* ClinicalModels.swift */; };
+		B10000000000000000000002 /* ClinicalAggregationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* ClinicalAggregationService.swift */; };
+		B10000000000000000000003 /* HistoryPDFExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* HistoryPDFExportService.swift */; };
+		B10000000000000000000004 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* TimelineView.swift */; };
+		B10000000000000000000005 /* AnalysesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* AnalysesView.swift */; };
+		B10000000000000000000006 /* AnalysisTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000006 /* AnalysisTrendView.swift */; };
+		B10000000000000000000007 /* ClinicalOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000007 /* ClinicalOverviewView.swift */; };
+		B10000000000000000000008 /* DocumentEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000008 /* DocumentEditView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +49,14 @@
 		A2000000000000000000000F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000010 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000011 /* MedVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MedVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20000000000000000000001 /* ClinicalModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalModels.swift; sourceTree = "<group>"; };
+		B20000000000000000000002 /* ClinicalAggregationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalAggregationService.swift; sourceTree = "<group>"; };
+		B20000000000000000000003 /* HistoryPDFExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryPDFExportService.swift; sourceTree = "<group>"; };
+		B20000000000000000000004 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		B20000000000000000000005 /* AnalysesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysesView.swift; sourceTree = "<group>"; };
+		B20000000000000000000006 /* AnalysisTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisTrendView.swift; sourceTree = "<group>"; };
+		B20000000000000000000007 /* ClinicalOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClinicalOverviewView.swift; sourceTree = "<group>"; };
+		B20000000000000000000008 /* DocumentEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentEditView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,10 +68,10 @@
 		A40000000000000000000002 /* MedVault */ = {isa = PBXGroup; children = (A40000000000000000000004 /* App */, A40000000000000000000005 /* Models */, A40000000000000000000006 /* Views */, A40000000000000000000007 /* ViewModels */, A40000000000000000000008 /* Services */, A40000000000000000000009 /* Components */, A4000000000000000000000A /* Resources */); path = MedVault; sourceTree = "<group>"; };
 		A40000000000000000000003 /* Products */ = {isa = PBXGroup; children = (A20000000000000000000011 /* MedVault.app */); name = Products; sourceTree = "<group>"; };
 		A40000000000000000000004 /* App */ = {isa = PBXGroup; children = (A20000000000000000000001 /* MedVaultApp.swift */); path = App; sourceTree = "<group>"; };
-		A40000000000000000000005 /* Models */ = {isa = PBXGroup; children = (A20000000000000000000002 /* Models.swift */); path = Models; sourceTree = "<group>"; };
-		A40000000000000000000006 /* Views */ = {isa = PBXGroup; children = (A20000000000000000000009 /* RootTabView.swift */, A2000000000000000000000A /* HomeView.swift */, A2000000000000000000000B /* DocumentLibraryView.swift */, A2000000000000000000000C /* DocumentDetailView.swift */, A2000000000000000000000D /* MedicalCardView.swift */, A2000000000000000000000E /* PrivacyView.swift */); path = Views; sourceTree = "<group>"; };
+		A40000000000000000000005 /* Models */ = {isa = PBXGroup; children = (A20000000000000000000002 /* Models.swift */, B20000000000000000000001 /* ClinicalModels.swift */); path = Models; sourceTree = "<group>"; };
+		A40000000000000000000006 /* Views */ = {isa = PBXGroup; children = (A20000000000000000000009 /* RootTabView.swift */, A2000000000000000000000A /* HomeView.swift */, A2000000000000000000000B /* DocumentLibraryView.swift */, A2000000000000000000000C /* DocumentDetailView.swift */, A2000000000000000000000D /* MedicalCardView.swift */, A2000000000000000000000E /* PrivacyView.swift */, B20000000000000000000004 /* TimelineView.swift */, B20000000000000000000005 /* AnalysesView.swift */, B20000000000000000000006 /* AnalysisTrendView.swift */, B20000000000000000000007 /* ClinicalOverviewView.swift */, B20000000000000000000008 /* DocumentEditView.swift */); path = Views; sourceTree = "<group>"; };
 		A40000000000000000000007 /* ViewModels */ = {isa = PBXGroup; children = (A20000000000000000000003 /* AppStore.swift */); path = ViewModels; sourceTree = "<group>"; };
-		A40000000000000000000008 /* Services */ = {isa = PBXGroup; children = (A20000000000000000000004 /* StorageService.swift */, A20000000000000000000005 /* OCRService.swift */, A20000000000000000000006 /* PDFService.swift */, A20000000000000000000007 /* MedicalTextParser.swift */); path = Services; sourceTree = "<group>"; };
+		A40000000000000000000008 /* Services */ = {isa = PBXGroup; children = (A20000000000000000000004 /* StorageService.swift */, A20000000000000000000005 /* OCRService.swift */, A20000000000000000000006 /* PDFService.swift */, A20000000000000000000007 /* MedicalTextParser.swift */, B20000000000000000000002 /* ClinicalAggregationService.swift */, B20000000000000000000003 /* HistoryPDFExportService.swift */); path = Services; sourceTree = "<group>"; };
 		A40000000000000000000009 /* Components */ = {isa = PBXGroup; children = (A20000000000000000000008 /* Components.swift */); path = Components; sourceTree = "<group>"; };
 		A4000000000000000000000A /* Resources */ = {isa = PBXGroup; children = (A2000000000000000000000F /* Assets.xcassets */, A20000000000000000000010 /* Info.plist */); path = Resources; sourceTree = "<group>"; };
 /* End PBXGroup section */
@@ -73,7 +89,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A30000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* MedVaultApp.swift in Sources */, A10000000000000000000002 /* Models.swift in Sources */, A10000000000000000000003 /* AppStore.swift in Sources */, A10000000000000000000004 /* StorageService.swift in Sources */, A10000000000000000000005 /* OCRService.swift in Sources */, A10000000000000000000006 /* PDFService.swift in Sources */, A10000000000000000000007 /* MedicalTextParser.swift in Sources */, A10000000000000000000008 /* Components.swift in Sources */, A10000000000000000000009 /* RootTabView.swift in Sources */, A1000000000000000000000A /* HomeView.swift in Sources */, A1000000000000000000000B /* DocumentLibraryView.swift in Sources */, A1000000000000000000000C /* DocumentDetailView.swift in Sources */, A1000000000000000000000D /* MedicalCardView.swift in Sources */, A1000000000000000000000E /* PrivacyView.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
+		A30000000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000001 /* MedVaultApp.swift in Sources */, A10000000000000000000002 /* Models.swift in Sources */, B10000000000000000000001 /* ClinicalModels.swift in Sources */, A10000000000000000000003 /* AppStore.swift in Sources */, A10000000000000000000004 /* StorageService.swift in Sources */, A10000000000000000000005 /* OCRService.swift in Sources */, A10000000000000000000006 /* PDFService.swift in Sources */, A10000000000000000000007 /* MedicalTextParser.swift in Sources */, B10000000000000000000002 /* ClinicalAggregationService.swift in Sources */, B10000000000000000000003 /* HistoryPDFExportService.swift in Sources */, A10000000000000000000008 /* Components.swift in Sources */, A10000000000000000000009 /* RootTabView.swift in Sources */, A1000000000000000000000A /* HomeView.swift in Sources */, A1000000000000000000000B /* DocumentLibraryView.swift in Sources */, A1000000000000000000000C /* DocumentDetailView.swift in Sources */, A1000000000000000000000D /* MedicalCardView.swift in Sources */, A1000000000000000000000E /* PrivacyView.swift in Sources */, B10000000000000000000004 /* TimelineView.swift in Sources */, B10000000000000000000005 /* AnalysesView.swift in Sources */, B10000000000000000000006 /* AnalysisTrendView.swift in Sources */, B10000000000000000000007 /* ClinicalOverviewView.swift in Sources */, B10000000000000000000008 /* DocumentEditView.swift in Sources */); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */

@@ -47,6 +47,31 @@ struct HomeView: View {
                     MetricCard(count: store.completedDocumentCount, title: "обработано", symbol: "checkmark.seal.fill", tint: .green)
                 }
 
+                NavigationLink {
+                    ClinicalOverviewView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "stethoscope")
+                            .font(.title3)
+                            .foregroundStyle(.teal)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Врачебный обзор")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text("Пациент, активные записи, последние анализы и динамика")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding()
+                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Последняя запись")
                         .font(.title2.bold())
@@ -110,7 +135,7 @@ private struct LatestDocumentCard: View {
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .lineLimit(2)
-                Text(document.createdAt.formatted(date: .abbreviated, time: .omitted))
+                Text(document.recordDate.formatted(date: .abbreviated, time: .omitted))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 ProcessingStatusBadge(status: document.status)

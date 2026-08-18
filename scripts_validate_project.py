@@ -72,11 +72,41 @@ feature_tokens = [
     "deleteDocument",
     "retryProcessing",
     "StorageService",
+    "MedicalTimelineEvent",
+    "HistoryRangePreset",
+    "ClinicalAggregationService",
+    "TimelineView",
+    "AnalysesView",
+    "AnalysisTrendView",
+    "ClinicalOverviewView",
+    "DocumentEditView",
+    "saveEditedDocument",
+    "HistoryPDFExportService",
+    "ActivityShareSheet",
+    "import Charts",
 ]
 for token in feature_tokens:
     if token not in source_text:
         errors.append(f"Required feature token is absent from source: {token}")
-checks.append("OCR, PDF, picker, safety notice, profile, deletion, retry, and storage code are present")
+checks.append("OCR, PDF, picker, safety notice, profile, deletion, retry, local storage, timeline, analyses, charts, manual editing, record links, and PDF export code are present")
+
+# Confirm all new source files are represented as both file references and target members.
+new_source_names = [
+    "ClinicalModels.swift",
+    "ClinicalAggregationService.swift",
+    "HistoryPDFExportService.swift",
+    "TimelineView.swift",
+    "AnalysesView.swift",
+    "AnalysisTrendView.swift",
+    "ClinicalOverviewView.swift",
+    "DocumentEditView.swift",
+]
+for name in new_source_names:
+    if f"/* {name} */ = {{isa = PBXFileReference" not in pbx:
+        errors.append(f"New source is missing an Xcode file reference: {name}")
+    if f"/* {name} in Sources */" not in pbx:
+        errors.append(f"New source is missing target membership: {name}")
+checks.append("All eight new Swift files have Xcode file references and target membership")
 
 # Coarse lexical checks catch accidental merge markers / invalid unbalanced braces.
 if "<<<<<<<" in source_text or ">>>>>>>" in source_text:

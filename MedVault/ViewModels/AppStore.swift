@@ -16,6 +16,7 @@ final class AppStore: ObservableObject {
     private let ocrService = OCRService()
     private let pdfService = PDFService()
     private let parser = MedicalTextParser()
+    private let aggregation = ClinicalAggregationService()
     private var profileSaveTask: Task<Void, Never>?
 
     init() {
@@ -27,17 +28,53 @@ final class AppStore: ObservableObject {
     }
 
     var latestDocument: MedicalDocument? {
-        documents.sorted { $0.createdAt > $1.createdAt }.first
+        documents.sorted { $0.recordDate > $1.recordDate }.first
+    }
+
+    var analysisGroups: [AnalysisGroup] {
+        aggregation.analysisGroups(from: documents)
+    }
+
+    var activeConditions: [MedicalCondition] {
+        profile.conditions.filter { $0.currentStatus == .active }
+    }
+
+    var activeMedications: [Medication] {
+        profile.medications.filter(\.isActive)
+    }
+
+    var recentAnalysisGroups: [AnalysisGroup] {
+        Array(analysisGroups.prefix(4))
+    }
+
+    func timelineEvents(using filter: MedicalHistoryFilter = .init()) -> [MedicalTimelineEvent] {
+        aggregation.filtered(events: aggregation.timelineEvents(documents: documents, profile: profile), using: filter)
+    }
+
+    func document(with id: UUID) -> MedicalDocument? {
+        documents.first { $0.id == id }
+    }
+
+    func linkedDocuments(for condition: MedicalCondition) -> [MedicalDocument] {
+        let ids = Set(condition.linkedDocumentIDsValue)
+        return documents.filter { ids.contains($0.id) }.sorted { $0.recordDate > $1.recordDate }
+    }
+
+    func linkedDocuments(for medication: Medication) -> [MedicalDocument] {
+        let ids = Set(medication.linkedDocumentIDsValue)
+        return documents.filter { ids.contains($0.id) }.sorted { $0.recordDate > $1.recordDate }
     }
 
     func loadPersistedData() async {
         do {
-            documents = try await storage.loadDocuments().sorted { $0.createdAt > $1.createdAt }
+            documents = try await storage.loadDocuments().sorted { $0.recordDate > $1.recordDate }
             profile = try await storage.loadProfile()
         } catch {
             loadError = "Не удалось открыть локальные данные: \(error.localizedDescription)"
         }
     }
+
+    // MARK: - Import and processing
 
     func importDocument(from sourceURL: URL) async {
         guard let fileKind = sourceURL.inferredDocumentFileKind else {
@@ -84,11 +121,25 @@ final class AppStore: ObservableObject {
         await processDocument(id: documentID)
     }
 
+    /// Saves user-edited OCR text, metadata, lab values and local links. No record is sent off-device.
+    func saveEditedDocument(_ editedDocument: MedicalDocument) async {
+        guard let index = documents.firstIndex(where: { $0.id == editedDocument.id }) else { return }
+        var document = editedDocument
+        document.manuallyEditedAt = .now
+        documents[index] = document
+        synchronizeProfileLinks(for: document)
+        documents.sort { $0.recordDate > $1.recordDate }
+        await persistDocuments()
+        await persistProfileImmediately()
+    }
+
     func deleteDocument(_ document: MedicalDocument) async {
         do {
             try await storage.deleteFile(at: document.relativeFilePath)
             documents.removeAll { $0.id == document.id }
+            removeDocumentLinks(document.id)
             await persistDocuments()
+            await persistProfileImmediately()
         } catch {
             importMessage = "Не удалось удалить оригинал файла: \(error.localizedDescription)"
         }
@@ -102,8 +153,11 @@ final class AppStore: ObservableObject {
     }
 
     func removeAllSampleData() async {
-        documents.removeAll { $0.isSampleData }
+        let sampleIDs = Set(documents.filter(\.isSampleData).map(\.id))
+        documents.removeAll(where: \.isSampleData)
+        for id in sampleIDs { removeDocumentLinks(id) }
         await persistDocuments()
+        await persistProfileImmediately()
     }
 
     func clearImportMessage() {
@@ -137,6 +191,7 @@ final class AppStore: ObservableObject {
             documents[latestIndex].type = inferType(from: text, fallback: documents[latestIndex].type)
             documents[latestIndex].status = .completed
             documents[latestIndex].errorMessage = nil
+            documents.sort { $0.recordDate > $1.recordDate }
             await persistDocuments()
         } catch {
             guard let latestIndex = documents.firstIndex(where: { $0.id == id }) else { return }
@@ -145,6 +200,43 @@ final class AppStore: ObservableObject {
             await persistDocuments()
         }
     }
+
+    // MARK: - Local links
+
+    private func synchronizeProfileLinks(for document: MedicalDocument) {
+        let conditionIDs = Set(document.linkedConditionIDsValue)
+        for index in profile.conditions.indices {
+            if conditionIDs.contains(profile.conditions[index].id) {
+                var links = Set(profile.conditions[index].linkedDocumentIDsValue)
+                links.insert(document.id)
+                profile.conditions[index].linkedDocumentIDs = Array(links).sorted { $0.uuidString < $1.uuidString }
+            } else {
+                profile.conditions[index].linkedDocumentIDs = profile.conditions[index].linkedDocumentIDsValue.filter { $0 != document.id }
+            }
+        }
+
+        let medicationIDs = Set(document.linkedMedicationIDsValue)
+        for index in profile.medications.indices {
+            if medicationIDs.contains(profile.medications[index].id) {
+                var links = Set(profile.medications[index].linkedDocumentIDsValue)
+                links.insert(document.id)
+                profile.medications[index].linkedDocumentIDs = Array(links).sorted { $0.uuidString < $1.uuidString }
+            } else {
+                profile.medications[index].linkedDocumentIDs = profile.medications[index].linkedDocumentIDsValue.filter { $0 != document.id }
+            }
+        }
+    }
+
+    private func removeDocumentLinks(_ documentID: UUID) {
+        for index in profile.conditions.indices {
+            profile.conditions[index].linkedDocumentIDs = profile.conditions[index].linkedDocumentIDsValue.filter { $0 != documentID }
+        }
+        for index in profile.medications.indices {
+            profile.medications[index].linkedDocumentIDs = profile.medications[index].linkedDocumentIDsValue.filter { $0 != documentID }
+        }
+    }
+
+    // MARK: - Persistence
 
     private func persistDocuments() async {
         do {
@@ -165,6 +257,15 @@ final class AppStore: ObservableObject {
             } catch {
                 self.loadError = "Не удалось сохранить медкарту: \(error.localizedDescription)"
             }
+        }
+    }
+
+    private func persistProfileImmediately() async {
+        profileSaveTask?.cancel()
+        do {
+            try await storage.saveProfile(profile)
+        } catch {
+            loadError = "Не удалось сохранить медкарту: \(error.localizedDescription)"
         }
     }
 

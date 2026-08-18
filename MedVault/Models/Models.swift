@@ -62,6 +62,13 @@ struct MedicalDocument: Codable, Identifiable, Equatable {
     var status: DocumentProcessingStatus
     var errorMessage: String?
     var isSampleData: Bool
+    /// Optional clinical date manually corrected by the user; absent in records created before this version.
+    var clinicalDate: Date?
+    /// Local links from this document to medical-card entities.
+    var linkedConditionIDs: [UUID]?
+    var linkedMedicationIDs: [UUID]?
+    /// Set only after a user saves manual corrections to extracted fields.
+    var manuallyEditedAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -75,7 +82,11 @@ struct MedicalDocument: Codable, Identifiable, Equatable {
         extractedInfo: ExtractedMedicalInfo = .empty,
         status: DocumentProcessingStatus = .pending,
         errorMessage: String? = nil,
-        isSampleData: Bool = false
+        isSampleData: Bool = false,
+        clinicalDate: Date? = nil,
+        linkedConditionIDs: [UUID]? = nil,
+        linkedMedicationIDs: [UUID]? = nil,
+        manuallyEditedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -89,6 +100,10 @@ struct MedicalDocument: Codable, Identifiable, Equatable {
         self.status = status
         self.errorMessage = errorMessage
         self.isSampleData = isSampleData
+        self.clinicalDate = clinicalDate
+        self.linkedConditionIDs = linkedConditionIDs
+        self.linkedMedicationIDs = linkedMedicationIDs
+        self.manuallyEditedAt = manuallyEditedAt
     }
 }
 
@@ -123,13 +138,16 @@ struct LabValue: Codable, Identifiable, Equatable {
     var value: String
     var unit: String?
     var referenceRange: String?
+    /// Optional for backward-compatible storage; records extracted before manual editing decode as false.
+    var isManuallyEdited: Bool?
 
-    init(id: UUID = UUID(), name: String, value: String, unit: String? = nil, referenceRange: String? = nil) {
+    init(id: UUID = UUID(), name: String, value: String, unit: String? = nil, referenceRange: String? = nil, isManuallyEdited: Bool? = nil) {
         self.id = id
         self.name = name
         self.value = value
         self.unit = unit
         self.referenceRange = referenceRange
+        self.isManuallyEdited = isManuallyEdited
     }
 }
 
@@ -190,12 +208,20 @@ struct MedicalCondition: Codable, Identifiable, Equatable {
     var name: String
     var year: String
     var note: String
+    var diagnosedAt: Date?
+    var resolvedAt: Date?
+    var status: ConditionStatus?
+    var linkedDocumentIDs: [UUID]?
 
-    init(id: UUID = UUID(), name: String, year: String = "", note: String = "") {
+    init(id: UUID = UUID(), name: String, year: String = "", note: String = "", diagnosedAt: Date? = nil, resolvedAt: Date? = nil, status: ConditionStatus? = nil, linkedDocumentIDs: [UUID]? = nil) {
         self.id = id
         self.name = name
         self.year = year
         self.note = note
+        self.diagnosedAt = diagnosedAt
+        self.resolvedAt = resolvedAt
+        self.status = status
+        self.linkedDocumentIDs = linkedDocumentIDs
     }
 }
 
@@ -205,13 +231,19 @@ struct Medication: Codable, Identifiable, Equatable {
     var dosage: String
     var frequency: String
     var note: String
+    var startedAt: Date?
+    var endedAt: Date?
+    var linkedDocumentIDs: [UUID]?
 
-    init(id: UUID = UUID(), name: String, dosage: String = "", frequency: String = "", note: String = "") {
+    init(id: UUID = UUID(), name: String, dosage: String = "", frequency: String = "", note: String = "", startedAt: Date? = nil, endedAt: Date? = nil, linkedDocumentIDs: [UUID]? = nil) {
         self.id = id
         self.name = name
         self.dosage = dosage
         self.frequency = frequency
         self.note = note
+        self.startedAt = startedAt
+        self.endedAt = endedAt
+        self.linkedDocumentIDs = linkedDocumentIDs
     }
 }
 

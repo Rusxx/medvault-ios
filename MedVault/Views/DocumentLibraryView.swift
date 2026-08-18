@@ -79,7 +79,7 @@ private struct DocumentRow: View {
                             .foregroundStyle(.blue)
                     }
                 }
-                Text("\(document.type.rawValue) · \(document.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                Text("\(document.type.rawValue) · \(document.recordDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 ProcessingStatusBadge(status: document.status)

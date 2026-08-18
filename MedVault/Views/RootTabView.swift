@@ -24,22 +24,28 @@ struct RootTabView: View {
             .tag(0)
 
             NavigationStack {
-                DocumentLibraryView()
+                TimelineView()
             }
-            .tabItem { Label("Документы", systemImage: "folder.fill") }
+            .tabItem { Label("История", systemImage: "calendar") }
             .tag(1)
+
+            NavigationStack {
+                AnalysesView()
+            }
+            .tabItem { Label("Анализы", systemImage: "testtube.2") }
+            .tag(2)
 
             NavigationStack {
                 MedicalCardView()
             }
             .tabItem { Label("Медкарта", systemImage: "cross.case.fill") }
-            .tag(2)
+            .tag(3)
 
             NavigationStack {
                 PrivacyView()
             }
             .tabItem { Label("Приватность", systemImage: "lock.fill") }
-            .tag(3)
+            .tag(4)
         }
         .tint(.teal)
         .confirmationDialog("Добавить медицинский документ", isPresented: $isShowingImportMenu, titleVisibility: .visible) {
